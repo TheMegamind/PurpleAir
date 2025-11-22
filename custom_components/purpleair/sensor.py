@@ -19,12 +19,12 @@ async def async_setup_entry(
     async_add_entities,
 ) -> None:
     coordinator = hass.data[DOMAIN]["coordinator"]
-    async_add_entities([PurpleAirAQISensor(coordinator)], True)
+    async_add_entities([PurpleAirSensor(coordinator)], True)
 
 
-class PurpleAirAQISensor(CoordinatorEntity, SensorEntity):
+class PurpleAirSensor(CoordinatorEntity, SensorEntity):
     _attr_has_entity_name = True
-    _attr_name = "PurpleAir AQI"
+    _attr_name = "PurpleAir"
     _attr_icon = "mdi:weather-hazy"
     _attr_native_unit_of_measurement = "AQI"
 
