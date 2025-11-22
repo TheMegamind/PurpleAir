@@ -12,6 +12,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import PurpleAirClient, PurpleAirConfig
 
+PLATFORMS = ["sensor", "number"]
+
 DOMAIN = "purpleair_aqi"
 
 _LOGGER = logging.getLogger(__name__)
