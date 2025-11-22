@@ -19,7 +19,7 @@ Fetches PM2.5-based AQI from nearby PurpleAir sensors, with averaging and PM2.5 
   * CF=1
   * None
 * Uses **averaged AQI** from multiple sensors
-* Supports **weighted averaging** (distance + sensor quality)
+* Supports **weighted averaging** (distance + sensor reliability score)
 * Adjustable:
 
   * Search radius
@@ -30,7 +30,7 @@ Fetches PM2.5-based AQI from nearby PurpleAir sensors, with averaging and PM2.5 
 
   * **aqi** – PM2.5 AQI (converted)
   * **category** – Good / Moderate / Unhealthy, etc.
-  * **sites** – List of sensors included in the calculation
+  * **sites** – List of contributing PurpleAir sensors
 * Compatible with **HACS** via Custom Repository
 * Minimal configuration required
 * Fully asynchronous and efficient
@@ -82,7 +82,7 @@ Can be edited anytime:
 * Conversion method
 * Update interval
 
-Latitude and longitude remain fixed after initial setup.
+Latitude and longitude remain fixed after initial setup. Changing the location requires removing and re-adding the integration.
 
 ---
 
@@ -119,7 +119,7 @@ This setting controls how frequently the integration requests new data from the 
 | Moderate (e.g., **10–15 minutes**) | Balanced updates | Recommended for most users                     |
 | Long (e.g., **30–60 minutes**)     | Fewer updates    | Lowest API use; slower to react to air changes |
 
-###📌 Recommendation
+### 📌 Recommendation
 
 > For most users, **10 minutes** provides a good balance between responsiveness and API efficiency.
 
@@ -133,6 +133,7 @@ This setting controls how frequently the integration requests new data from the 
 ---
 
 ## 🌫 PM₂.₅ Conversion Formulas Explained
+*For most outdoor use, **US EPA** is recommended unless you live in a wildfire-heavy region.*
 
 
 | Formula       | Best For                       | Description / Source                                                                                                                      |
@@ -144,6 +145,12 @@ This setting controls how frequently the integration requests new data from the 
 | **CF = 1**    | Indoor sensors                 | A factory “no-correction/wet” value. High-bias outdoors, but suitable indoors (no humidity correction needed).                            |
 | **None**      | Raw data use                   | Reports the uncorrected sensor value exactly as measured. Most users shouldn’t choose this. Used for research or custom processing.       |
 
+
+---
+
+### 🔑 API Key Notes
+Your API key is stored securely by Home Assistant.  
+No YAML or secrets file configuration is required.
 
 ---
 
