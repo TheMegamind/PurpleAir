@@ -8,7 +8,7 @@ including multi-sensor averaging, category reporting, and conversion options.
 2. Add this repo:
 
 ```
-[https://github.com/TheMegamind/purple_air](https://github.com/TheMegamind/purple_air
+https://github.com/TheMegamind/purple_air
 ```
 
 3. Select category: **Integration**
@@ -20,7 +20,6 @@ including multi-sensor averaging, category reporting, and conversion options.
 ## Features
 - Converts to EPA, Woodsmoke, AQ&U, LRAPA or CF=1
 - Weighted or unweighted multi-sensor averaging
-- Only the AQI sensor you care about (no raw sensors, no humidity entities)
 
 ---
 
