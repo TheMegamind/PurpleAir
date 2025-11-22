@@ -20,15 +20,15 @@ CONVERSION_OPTIONS = [
 ]
 
 
-class PurpleAirAQIConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for PurpleAir AQI."""
+class PurpleAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Config flow for PurpleAir."""
 
     VERSION = 1
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return PurpleAirAQIOptionsFlow(config_entry)
+        return PurpleAirOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """Initial setup."""
@@ -36,7 +36,7 @@ class PurpleAirAQIConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            return self.async_create_entry(title="PurpleAir AQI", data=user_input)
+            return self.async_create_entry(title="PurpleAir", data=user_input)
 
         # Defaults from HA location
         default_lat = self.hass.config.latitude
@@ -71,7 +71,7 @@ class PurpleAirAQIConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=STEP_SCHEMA)
 
 
-class PurpleAirAQIOptionsFlow(config_entries.OptionsFlow):
+class PurpleAirOptionsFlow(config_entries.OptionsFlow):
     """Options flow that allows editing limited parameters."""
 
     def __init__(self, entry: config_entries.ConfigEntry) -> None:
