@@ -1,4 +1,4 @@
-# custom_components/purpleair_aqi/sensor.py
+# custom_components/purpleair/sensor.py
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ class PurpleAirAQISensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator) -> None:
         super().__init__(coordinator)
-        self._attr_unique_id = "purpleair_aqi"
+        self._attr_unique_id = "purpleair"
 
     @property
     def native_value(self) -> int | None:
