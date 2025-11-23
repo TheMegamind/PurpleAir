@@ -189,6 +189,7 @@ See the `LICENSE` file for details.
 ## Disclaimers
 
 * The **PurpleAir** name and logo are trademarks of **PurpleAir, Inc.**  
-* This project is an independent, community-maintained integration for Home Assistant and is **not affiliated with, endorsed by, or sponsored by PurpleAir, Inc.** in any way.
+* The **HOME ASSISTANT** name and logo are trademarks of **Nabu Casa, Inc.**.
+* This project is an independent, community-maintained integration and is **not affiliated with, endorsed by, or sponsored by PurpleAir, Inc. or Nabu Casa, Inc.** in any way.
 
 ---
