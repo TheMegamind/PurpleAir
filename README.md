@@ -1,9 +1,22 @@
 
 ---
 
+<table>
+<tr>
+<td width="100">
+<img src="https://github.com/TheMegamind/PurpleAir/blob/main/assets/PurpleAir.png"
+     width="100" alt="PurpleAir Logo">
+</td>
+<td>
+
 # PurpleAir – Home Assistant Custom Integration
 
-Fetches PM2.5-based AQI from nearby PurpleAir sensors, with multi-sensor averaging, adjustable polling rate, and five PM2.5 conversion options.
+</td>
+</tr>
+</table>
+
+
+**Fetches PM2.5-based AQI from nearby PurpleAir sensors, with multi-sensor averaging, adjustable polling rate, and five PM2.5 conversion options.**
 
 ---
 
