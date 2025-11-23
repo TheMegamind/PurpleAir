@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import UnitOfTime
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -41,14 +43,14 @@ class PurpleAirUpdateIntervalNumber(CoordinatorEntity, NumberEntity):
     async def async_set_native_value(self, value: float):
         self._value = int(value)
 
-        data = dict(self.entry.data)
-        data["update_interval"] = self._value
-
-        # Update the config entry but WITHOUT restarting the integration
+        # Persist updated interval without restart
         self.hass.config_entries.async_update_entry(
-            self.entry, data=data
+            self.entry,
+            data={**self.entry.data, "update_interval": self._value}
         )
 
-        # Now tell coordinator to update polling frequency
-        interval_seconds = self._value * 60
-        self.coordinator.update_interval = interval_seconds
+        # Update coordinator interval correctly
+        self.coordinator.update_interval = timedelta(minutes=self._value)
+
+        # Request an immediate refresh
+        await self.coordinator.async_request_refresh()
