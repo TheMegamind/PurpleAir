@@ -44,7 +44,6 @@
   * **aqi** – PM2.5 AQI (converted)
   * **category** – Good / Moderate / Unhealthy, etc.
   * **sites** – List of contributing PurpleAir sensors
-* Compatible with **HACS** via Custom Repository
 * Minimal configuration required
 * Fully asynchronous and efficient
 
