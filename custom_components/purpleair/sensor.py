@@ -2,63 +2,22 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
+from datetime import datetime
 
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorDeviceClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN
 from .api import PurpleAirResult
 
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities,
-) -> None:
-    """Set up PurpleAir sensors from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-
-    entities: list[SensorEntity] = [
-        PurpleAirAQISensor(coordinator, entry),
-        PurpleAirCategorySensor(coordinator, entry),
-        PurpleAirConversionSensor(coordinator, entry),
-        PurpleAirSitesSensor(coordinator, entry),
-        PurpleAirHealthStatusSensor(coordinator, entry),
-        PurpleAirHealthAdvisoryLongSensor(coordinator, entry),
-        PurpleAirHealthAdvisoryShortSensor(coordinator, entry),
-        PurpleAirAQIColorSensor(coordinator, entry),
-        PurpleAirAQILevelSensor(coordinator, entry),
-        PurpleAirAQIDeltaSensor(coordinator, entry),
-    ]
-
-    async_add_entities(entities, True)
-
-
-# ════════════════════════════════════════════════════════════════════════
-# COMMON MIXIN FOR DEVICE REGISTRATION
-# ════════════════════════════════════════════════════════════════════════
-
-
-class PurpleAirBase:
-    """Mixin adding shared device_info."""
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.entry.entry_id)},
-            "name": "PurpleAir",
-        }
-
-
-# ════════════════════════════════════════════════════════════════════════
-# CONSTANT MAPPINGS (EPA STYLE)
-# ════════════════════════════════════════════════════════════════════════
-
-CATEGORY_TO_LEVEL: dict[str, int] = {
+CATEGORY_TO_LEVEL = {
     "Good": 1,
     "Moderate": 2,
     "Unhealthy for Sensitive Groups": 3,
@@ -67,345 +26,243 @@ CATEGORY_TO_LEVEL: dict[str, int] = {
     "Hazardous": 6,
 }
 
-# severity mapping for HA enum severity support
-CATEGORY_TO_SEVERITY: dict[str, str] = {
-    "Good": "info",
-    "Moderate": "warning",
-    "Unhealthy for Sensitive Groups": "warning",
-    "Unhealthy": "critical",
-    "Very Unhealthy": "critical",
-    "Hazardous": "critical",
+HEALTH_ADVISORY_SHORT = {
+    "Good": "Air quality is good.",
+    "Moderate": "Acceptable; some pollutants may affect sensitive people.",
+    "Unhealthy for Sensitive Groups": "Sensitive groups should limit exposure.",
+    "Unhealthy": "Everyone may experience negative health effects.",
+    "Very Unhealthy": "Health warnings of emergency conditions.",
+    "Hazardous": "Serious health effects; avoid outdoor exposure.",
 }
 
-# color name + hex (EPA palette)
-CATEGORY_TO_COLOR: dict[str, tuple[str, str]] = {
-    "Good": ("green", "#00E400"),
-    "Moderate": ("yellow", "#FFFF00"),
-    "Unhealthy for Sensitive Groups": ("orange", "#FF7E00"),
-    "Unhealthy": ("red", "#FF0000"),
-    "Very Unhealthy": ("purple", "#8F3F97"),
-    "Hazardous": ("maroon", "#7E0023"),
-}
-
-ADVISORIES_LONG: dict[str, str] = {
+HEALTH_ADVISORY_LONG = {
     "Good": "Air quality is good. Enjoy your day!",
-    "Moderate": "Moderate air quality. Sensitive individuals should consider reducing prolonged outdoor exertion.",
-    "Unhealthy for Sensitive Groups": "Limit prolonged outdoor exertion if you are sensitive.",
-    "Unhealthy": "Air is unhealthy. Consider reducing outdoor activities.",
-    "Very Unhealthy": "Health alert: everyone may experience more serious effects.",
-    "Hazardous": "Emergency conditions: avoid outdoor activity.",
-}
-
-ADVISORIES_SHORT: dict[str, str] = {
-    "Good": "Good",
-    "Moderate": "Moderate",
-    "Unhealthy for Sensitive Groups": "Unhealthy for sensitive groups",
-    "Unhealthy": "Unhealthy",
-    "Very Unhealthy": "Very unhealthy",
-    "Hazardous": "Hazardous",
+    "Moderate": "Air quality is acceptable, but some pollutants may affect sensitive individuals.",
+    "Unhealthy for Sensitive Groups": "Sensitive groups should reduce prolonged or heavy exertion outdoors.",
+    "Unhealthy": "Everyone may begin to experience health effects; limit outdoor activities.",
+    "Very Unhealthy": "Health alert: increased risk for everyone. Avoid outdoor exertion.",
+    "Hazardous": "Health warnings of emergency conditions. Stay indoors and minimize exposure.",
 }
 
 
-# ════════════════════════════════════════════════════════════════════════
-# AQI SENSOR
-# ════════════════════════════════════════════════════════════════════════
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities,
+) -> None:
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+
+    entities = [
+        PurpleAirAQISensor(coordinator, entry),
+        PurpleAirCategorySensor(coordinator, entry),
+        PurpleAirConversionSensor(coordinator, entry),
+        PurpleAirSitesSensor(coordinator, entry),
+        PurpleAirHealthStatusSensor(coordinator, entry),
+        PurpleAirHealthAdvisoryShortSensor(coordinator, entry),
+        PurpleAirHealthAdvisoryLongSensor(coordinator, entry),
+        PurpleAirAQILevelSensor(coordinator, entry),
+        PurpleAirAQIDeltaSensor(coordinator, entry),
+        PurpleAirAQIColorSensor(coordinator, entry),
+    ]
+
+    async_add_entities(entities, True)
 
 
-class PurpleAirAQISensor(PurpleAirBase, CoordinatorEntity, SensorEntity):
-    """PurpleAir AQI sensor."""
+# ──────────────────────────────────────────────────────────────────────────────
+# Base class
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirBaseSensor(CoordinatorEntity, SensorEntity):
+    """Base class for all PurpleAir sensors."""
 
     _attr_has_entity_name = True
-    _attr_name = "AQI"
-    _attr_icon = "mdi:weather-hazy"
-    _attr_native_unit_of_measurement = "AQI"
 
     def __init__(self, coordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_aqi"
-        self._update_interval = int(entry.data.get("update_interval", 10))
+        self._base_unique = entry.entry_id
+
+    @property
+    def result(self) -> PurpleAirResult | None:
+        return self.coordinator.data
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.entry.entry_id)},
+            name="PurpleAir",
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# AQI — numeric
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirAQISensor(PurpleAirBaseSensor):
+    _attr_name = "AQI"
+    _attr_icon = "mdi:weather-hazy"
+    _attr_native_unit_of_measurement = "AQI"
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._base_unique}_aqi"
 
     @property
     def native_value(self) -> int | None:
-        result: PurpleAirResult | None = self.coordinator.data
-        return result.aqi if result else None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        result: PurpleAirResult | None = self.coordinator.data
-        if not result:
-            return None
-
-        level = CATEGORY_TO_LEVEL.get(result.category)
-        color_name, color_hex = CATEGORY_TO_COLOR.get(
-            result.category, ("unknown", "#000000")
-        )
-
-        return {
-            "category": result.category,
-            "sites": result.sites,
-            "conversion": result.conversion,
-            "weighted": result.weighted,
-            "fetch_time": datetime.now().isoformat(),
-            "update_interval": self._update_interval,
-            "aqi_level": level,
-            "aqi_color_name": color_name,
-            "aqi_color_hex": color_hex,
-        }
+        return self.result.aqi if self.result else None
 
 
-# ════════════════════════════════════════════════════════════════════════
-# CATEGORY SENSOR (ENUM + SEVERITY)
-# ════════════════════════════════════════════════════════════════════════
-
-
-class PurpleAirCategorySensor(PurpleAirBase, CoordinatorEntity, SensorEntity):
-    """AQI category sensor using HA enum/severity."""
-
-    _attr_has_entity_name = True
+# ──────────────────────────────────────────────────────────────────────────────
+# Category — ENUM
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirCategorySensor(PurpleAirBaseSensor):
     _attr_name = "Category"
     _attr_icon = "mdi:eye"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = list(CATEGORY_TO_LEVEL.keys())
 
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_category"
+    @property
+    def unique_id(self) -> str:
+        return f"{self._base_unique}_category"
 
     @property
     def native_value(self) -> str | None:
-        result: PurpleAirResult | None = self.coordinator.data
-        return result.category if result else None
-
-    @property
-    def native_severity(self) -> str | None:
-        result: PurpleAirResult | None = self.coordinator.data
-        if not result:
-            return None
-        return CATEGORY_TO_SEVERITY.get(result.category)
+        return self.result.category if self.result else None
 
 
-# ════════════════════════════════════════════════════════════════════════
-# CONVERSION SENSOR
-# ════════════════════════════════════════════════════════════════════════
-
-
-class PurpleAirConversionSensor(PurpleAirBase, CoordinatorEntity, SensorEntity):
-    """Conversion method sensor."""
-
-    _attr_has_entity_name = True
+# ──────────────────────────────────────────────────────────────────────────────
+# Conversion
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirConversionSensor(PurpleAirBaseSensor):
     _attr_name = "Conversion"
-    _attr_icon = "mdi:flask-outline"
+    _attr_icon = "mdi:flask"
 
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_conversion"
+    @property
+    def unique_id(self) -> str:
+        return f"{self._base_unique}_conversion"
 
     @property
     def native_value(self) -> str | None:
-        result: PurpleAirResult | None = self.coordinator.data
-        return result.conversion if result else None
+        return self.result.conversion if self.result else None
 
 
-# ════════════════════════════════════════════════════════════════════════
-# SITES SENSOR
-# ════════════════════════════════════════════════════════════════════════
-
-
-class PurpleAirSitesSensor(PurpleAirBase, CoordinatorEntity, SensorEntity):
-    """Sites used in AQI calculation."""
-
-    _attr_has_entity_name = True
+# ──────────────────────────────────────────────────────────────────────────────
+# Sites
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirSitesSensor(PurpleAirBaseSensor):
     _attr_name = "Sites"
-    _attr_icon = "mdi:map-marker-multiple-outline"
+    _attr_icon = "mdi:map-marker"
 
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_sites"
+    @property
+    def unique_id(self) -> str:
+        return f"{self._base_unique}_sites"
 
     @property
     def native_value(self) -> str | None:
-        result: PurpleAirResult | None = self.coordinator.data
-        if not result or not result.sites:
+        if not self.result:
             return None
-        return ", ".join(result.sites)
+        return ", ".join(self.result.sites)
 
 
-# ════════════════════════════════════════════════════════════════════════
-# HEALTH STATUS SENSOR
-# ════════════════════════════════════════════════════════════════════════
-
-
-class PurpleAirHealthStatusSensor(PurpleAirBase, CoordinatorEntity, SensorEntity):
-    """Indicates if PurpleAir data is online or offline."""
-
-    _attr_has_entity_name = True
+# ──────────────────────────────────────────────────────────────────────────────
+# Health Status
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirHealthStatusSensor(PurpleAirBaseSensor):
     _attr_name = "Health Status"
-    _attr_icon = "mdi:eye-check-outline"
-
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_health"
+    _attr_icon = "mdi:eye"
 
     @property
-    def native_value(self) -> str:
-        result: PurpleAirResult | None = self.coordinator.data
-        if not result:
-            return "offline"
-        return "online"
-
-
-# ════════════════════════════════════════════════════════════════════════
-# HEALTH ADVISORY (LONG)
-# ════════════════════════════════════════════════════════════════════════
-
-
-class PurpleAirHealthAdvisoryLongSensor(PurpleAirBase, CoordinatorEntity, SensorEntity):
-    """Long-form health advisory based on AQI category."""
-
-    _attr_has_entity_name = True
-    _attr_name = "Health Advisory (Long)"
-    _attr_icon = "mdi:head-question-outline"
-
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_advisory_long"
-
-    @property
-    def native_value(self) -> str:
-        result: PurpleAirResult | None = self.coordinator.data
-        if not result:
-            return "No data available"
-        return ADVISORIES_LONG.get(
-            result.category, "Air quality information unavailable."
-        )
-
-
-# ════════════════════════════════════════════════════════════════════════
-# HEALTH ADVISORY (SHORT)
-# ════════════════════════════════════════════════════════════════════════
-
-
-class PurpleAirHealthAdvisoryShortSensor(PurpleAirBase, CoordinatorEntity, SensorEntity):
-    """Short health advisory phrase based on AQI category."""
-
-    _attr_has_entity_name = True
-    _attr_name = "Health Advisory (Short)"
-    _attr_icon = "mdi:head-alert-outline"
-
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_advisory_short"
-
-    @property
-    def native_value(self) -> str:
-        result: PurpleAirResult | None = self.coordinator.data
-        if not result:
-            return "No data"
-        return ADVISORIES_SHORT.get(result.category, "Unknown")
-
-
-# ════════════════════════════════════════════════════════════════════════
-# AQI COLOR SENSOR
-# ════════════════════════════════════════════════════════════════════════
-
-
-class PurpleAirAQIColorSensor(PurpleAirBase, CoordinatorEntity, SensorEntity):
-    """AQI color (name) with hex in attributes."""
-
-    _attr_has_entity_name = True
-    _attr_name = "AQI Color"
-    _attr_icon = "mdi:palette"
-
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_aqi_color"
+    def unique_id(self) -> str:
+        return f"{self._base_unique}_health_status"
 
     @property
     def native_value(self) -> str | None:
-        result: PurpleAirResult | None = self.coordinator.data
-        if not result:
-            return None
-        color_name, _ = CATEGORY_TO_COLOR.get(result.category, ("unknown", "#000000"))
-        return color_name
+        return "online" if self.result else "offline"
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Health Advisory Short
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirHealthAdvisoryShortSensor(PurpleAirBaseSensor):
+    _attr_name = "Health Advisory (Short)"
+    _attr_icon = "mdi:lightbulb-question-outline"
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        result: PurpleAirResult | None = self.coordinator.data
-        if not result:
+    def unique_id(self) -> str:
+        return f"{self._base_unique}_health_adv_short"
+
+    @property
+    def native_value(self) -> str | None:
+        if not self.result:
             return None
-        color_name, color_hex = CATEGORY_TO_COLOR.get(
-            result.category, ("unknown", "#000000")
-        )
-        return {
-            "color_name": color_name,
-            "color_hex": color_hex,
-        }
+        return HEALTH_ADVISORY_SHORT.get(self.result.category, "Unknown")
 
 
-# ════════════════════════════════════════════════════════════════════════
-# AQI LEVEL SENSOR (1–6)
-# ════════════════════════════════════════════════════════════════════════
+# ──────────────────────────────────────────────────────────────────────────────
+# Health Advisory Long
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirHealthAdvisoryLongSensor(PurpleAirBaseSensor):
+    _attr_name = "Health Advisory"
+    _attr_icon = "mdi:lightbulb-on-outline"
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._base_unique}_health_adv_long"
+
+    @property
+    def native_value(self) -> str | None:
+        if not self.result:
+            return None
+        return HEALTH_ADVISORY_LONG.get(self.result.category, "Unknown")
 
 
-class PurpleAirAQILevelSensor(PurpleAirBase, CoordinatorEntity, SensorEntity):
-    """EPA AQI level 1–6."""
-
-    _attr_has_entity_name = True
+# ──────────────────────────────────────────────────────────────────────────────
+# AQI Level (1–6) — MUST be string to avoid becoming a control
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirAQILevelSensor(PurpleAirBaseSensor):
     _attr_name = "AQI Level"
     _attr_icon = "mdi:numeric"
 
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_aqi_level"
+    @property
+    def unique_id(self) -> str:
+        return f"{self._base_unique}_aqi_level"
 
     @property
-    def native_value(self) -> int | None:
-        result: PurpleAirResult | None = self.coordinator.data
-        if not result:
+    def native_value(self) -> str | None:
+        if not self.result:
             return None
-        return CATEGORY_TO_LEVEL.get(result.category)
+        num = CATEGORY_TO_LEVEL.get(self.result.category)
+        return str(num) if num is not None else None
 
 
-# ════════════════════════════════════════════════════════════════════════
-# AQI DELTA SENSOR (CHANGE SINCE LAST UPDATE)
-# ════════════════════════════════════════════════════════════════════════
-
-
-class PurpleAirAQIDeltaSensor(PurpleAirBase, CoordinatorEntity, SensorEntity):
-    """Change in AQI since last update."""
-
-    _attr_has_entity_name = True
+# ──────────────────────────────────────────────────────────────────────────────
+# AQI Delta — numeric
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirAQIDeltaSensor(PurpleAirBaseSensor):
     _attr_name = "AQI Delta"
-    _attr_icon = "mdi:triangle-wave"
+    _attr_icon = "mdi:vector-difference"
     _attr_native_unit_of_measurement = "AQI"
 
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self.entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_aqi_delta"
-        self._last_aqi: int | None = None
+    @property
+    def unique_id(self) -> str:
+        return f"{self._base_unique}_aqi_delta"
 
     @property
     def native_value(self) -> int | None:
-        """Return AQI delta since last coordinator update."""
-        result: PurpleAirResult | None = self.coordinator.data
-        if not result:
+        if not self.result:
             return None
+        return self.result.delta
 
-        current = result.aqi
-        if self._last_aqi is None:
-            delta = 0
-        else:
-            delta = current - self._last_aqi
 
-        self._last_aqi = current
-        return delta
+# ──────────────────────────────────────────────────────────────────────────────
+# AQI Color — text
+# ──────────────────────────────────────────────────────────────────────────────
+class PurpleAirAQIColorSensor(PurpleAirBaseSensor):
+    _attr_name = "AQI Color"
+    _attr_icon = "mdi:palette"
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._base_unique}_aqi_color"
+
+    @property
+    def native_value(self) -> str | None:
+        return self.result.color if self.result else None
