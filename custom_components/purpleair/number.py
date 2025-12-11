@@ -1,6 +1,8 @@
+# custom_components/purpleair/number.py
+
 from __future__ import annotations
 
-from datetime import timedelta   # <-- REQUIRED
+from datetime import timedelta
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -32,18 +34,23 @@ class PurpleAirUpdateIntervalNumber(CoordinatorEntity, NumberEntity):
         self.entry = entry
         self._attr_unique_id = f"{entry.entry_id}_update_interval"
 
+    # NEW — THIS FIXES THE MISSING CONTROL
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.entry.entry_id)},
+            "name": "PurpleAir",
+        }
+
     @property
     def native_value(self):
-        """Return current interval as reported by config entry."""
         return int(self.entry.data.get("update_interval", 10))
 
     async def async_set_native_value(self, value):
-        """User moved the slider — update entry & coordinator."""
-        # Update config entry
+        """User adjusted the slider."""
         new = {**self.entry.data, "update_interval": int(value)}
         self.hass.config_entries.async_update_entry(self.entry, data=new)
 
-        # Apply new polling interval instantly
+        # Apply update interval immediately
         self.coordinator.update_interval = timedelta(minutes=int(value))
-
         await self.coordinator.async_request_refresh()
