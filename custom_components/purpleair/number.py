@@ -1,4 +1,3 @@
-# custom_components/purpleair/number.py
 
 from __future__ import annotations
 
