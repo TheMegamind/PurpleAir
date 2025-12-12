@@ -29,7 +29,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
-    session = aiohttp.ClientSession()
+    session = aiohttp.ClientSession(
+        connector=aiohttp.TCPConnector(ssl=False)
+    )
+
+
     conf = entry.data
 
     coords = None
@@ -50,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     client = PurpleAirClient(session, cfg)
-
+  
     last_aqi: int | None = None
     
     async def async_update():
@@ -58,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             data = await client.fetch()
     
-            # Compute AQI delta safely
             if data and data.aqi is not None:
                 if last_aqi is None:
                     data._aqi_delta = 0
@@ -67,12 +70,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 last_aqi = data.aqi
             elif data:
                 data._aqi_delta = None
-
     
             return data
     
         except Exception as err:
             raise UpdateFailed(str(err)) from err
+
     
 
     coordinator = DataUpdateCoordinator(
