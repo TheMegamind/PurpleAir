@@ -1,5 +1,3 @@
-# custom_components/purpleair/number.py (working)
-
 from __future__ import annotations
 
 from datetime import timedelta
@@ -22,7 +20,7 @@ async def async_setup_entry(
 
 
 class PurpleAirUpdateIntervalNumber(CoordinatorEntity, NumberEntity):
-    """Controls the PurpleAir polling interval."""
+    """Polling interval control."""
 
     _attr_has_entity_name = True
     _attr_name = "Update Interval"
@@ -46,12 +44,14 @@ class PurpleAirUpdateIntervalNumber(CoordinatorEntity, NumberEntity):
         }
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         return int(self.entry.data.get("update_interval", 10))
 
     async def async_set_native_value(self, value: float) -> None:
-        new = {**self.entry.data, "update_interval": int(value)}
-        self.hass.config_entries.async_update_entry(self.entry, data=new)
+        minutes = int(value)
 
-        self.coordinator.update_interval = timedelta(minutes=int(value))
+        new_data = {**self.entry.data, "update_interval": minutes}
+        self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+
+        self.coordinator.update_interval = timedelta(minutes=minutes)
         await self.coordinator.async_request_refresh()
