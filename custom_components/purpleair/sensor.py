@@ -6,12 +6,6 @@ from typing import Any
 
 from homeassistant.components.sensor import (
     SensorEntity,
-    SensorDeviceClass,from __future__ import annotations
-
-from typing import Any
-
-from homeassistant.components.sensor import (
-    SensorEntity,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -21,6 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN
 from .api import PurpleAirResult
+
 
 
 async def async_setup_entry(
