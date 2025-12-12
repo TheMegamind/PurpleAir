@@ -1,5 +1,3 @@
-# custom_components/purpleair/__init__.py (Working)
-
 from __future__ import annotations
 
 from datetime import timedelta
@@ -22,34 +20,29 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up PurpleAir (config_flow only)."""
+    """Set up via YAML (not used)."""
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a PurpleAir config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     session = aiohttp.ClientSession()
     conf = entry.data
 
-    device_search = conf.get("device_search", True)
-    sensor_index = conf.get("sensor_index")
-    read_key = conf.get("read_key")
-
-    coords: tuple[float, float] | None = None
-    if device_search:
+    coords = None
+    if conf.get("device_search", True):
         coords = (float(conf["latitude"]), float(conf["longitude"]))
 
     cfg = PurpleAirConfig(
         api_key=conf["api_key"],
-        device_search=device_search,
+        device_search=conf.get("device_search", True),
         search_coords=coords,
         search_range=float(conf.get("search_range", 1.5)),
         unit=conf.get("unit", "miles"),
         weighted=conf.get("weighted", True),
-        sensor_index=int(sensor_index) if sensor_index is not None else None,
-        read_key=read_key,
+        sensor_index=conf.get("sensor_index"),
+        read_key=conf.get("read_key"),
         conversion=conf.get("conversion", "US EPA"),
         update_interval=int(conf.get("update_interval", 10)),
     )
@@ -83,14 +76,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a PurpleAir config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     data = hass.data[DOMAIN].pop(entry.entry_id, None)
-    if data:
-        session = data.get("session")
-        if session:
-            await session.close()
+    if data and data.get("session"):
+        await data["session"].close()
 
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
