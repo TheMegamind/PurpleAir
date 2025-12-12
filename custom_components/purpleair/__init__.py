@@ -1,4 +1,4 @@
-# custom_components/purpleair/__init__.py
+# custom_components/purpleair/__init__.py (Working)
 
 from __future__ import annotations
 
