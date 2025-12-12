@@ -24,7 +24,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            PurpleAirAQISensor(coordinator, entry),          # ← RESTORED
+            PurpleAirAQISensor(coordinator, entry),    
             PurpleAirAQIDeltaSensor(coordinator, entry),
             PurpleAirAQILevelSensor(coordinator, entry),
             PurpleAirCategorySensor(coordinator, entry),
