@@ -1,4 +1,4 @@
-# custom_components/purpleair/number.py
+# custom_components/purpleair/number.py (working)
 
 from __future__ import annotations
 
