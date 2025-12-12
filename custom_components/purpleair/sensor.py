@@ -37,9 +37,6 @@ async def async_setup_entry(
     )
 
 
-# ────────────────────────────────────────────────────────────────
-# Base
-# ────────────────────────────────────────────────────────────────
 class PurpleAirBase(CoordinatorEntity, SensorEntity):
     _attr_has_entity_name = True
 
@@ -59,9 +56,6 @@ class PurpleAirBase(CoordinatorEntity, SensorEntity):
         return self.coordinator.data
 
 
-# ────────────────────────────────────────────────────────────────
-# AQI — PRIMARY SENSOR
-# ────────────────────────────────────────────────────────────────
 class PurpleAirAQISensor(PurpleAirBase):
     _attr_name = "AQI"
     _attr_icon = "mdi:weather-hazy"
@@ -77,9 +71,6 @@ class PurpleAirAQISensor(PurpleAirBase):
         return self.result.aqi if self.result else None
 
 
-# ────────────────────────────────────────────────────────────────
-# AQI Delta
-# ────────────────────────────────────────────────────────────────
 class PurpleAirAQIDeltaSensor(PurpleAirBase):
     _attr_name = "AQI Delta"
     _attr_icon = "mdi:vector-difference"
@@ -95,9 +86,6 @@ class PurpleAirAQIDeltaSensor(PurpleAirBase):
         return getattr(self.result, "_aqi_delta", None) if self.result else None
 
 
-# ────────────────────────────────────────────────────────────────
-# AQI Level (1–6)
-# ────────────────────────────────────────────────────────────────
 CATEGORY_TO_LEVEL = {
     "Good": 1,
     "Moderate": 2,
@@ -124,9 +112,6 @@ class PurpleAirAQILevelSensor(PurpleAirBase):
         return str(level) if level is not None else None
 
 
-# ────────────────────────────────────────────────────────────────
-# Category
-# ────────────────────────────────────────────────────────────────
 class PurpleAirCategorySensor(PurpleAirBase):
     _attr_name = "Category"
     _attr_device_class = SensorDeviceClass.ENUM
@@ -141,9 +126,6 @@ class PurpleAirCategorySensor(PurpleAirBase):
         return self.result.category if self.result else None
 
 
-# ────────────────────────────────────────────────────────────────
-# AQI Color
-# ────────────────────────────────────────────────────────────────
 CATEGORY_TO_COLOR = {
     "Good": "Green",
     "Moderate": "Yellow",
@@ -166,10 +148,6 @@ class PurpleAirAQIColorSensor(PurpleAirBase):
     def native_value(self):
         return CATEGORY_TO_COLOR.get(self.result.category) if self.result else None
 
-
-# ────────────────────────────────────────────────────────────────
-# Conversion
-# ────────────────────────────────────────────────────────────────
 class PurpleAirConversionSensor(PurpleAirBase):
     _attr_name = "Conversion"
     _attr_icon = "mdi:flask-outline"
@@ -183,9 +161,6 @@ class PurpleAirConversionSensor(PurpleAirBase):
         return self.result.conversion if self.result else None
 
 
-# ────────────────────────────────────────────────────────────────
-# Health Advisory
-# ────────────────────────────────────────────────────────────────
 ADVISORY_TEXT = {
     "Good": "Air quality is good. Enjoy your day!",
     "Moderate": "Sensitive individuals should limit prolonged outdoor exertion.",
@@ -209,9 +184,6 @@ class PurpleAirHealthAdvisorySensor(PurpleAirBase):
         return ADVISORY_TEXT.get(self.result.category) if self.result else None
 
 
-# ────────────────────────────────────────────────────────────────
-# Health Status
-# ────────────────────────────────────────────────────────────────
 class PurpleAirHealthStatusSensor(PurpleAirBase):
     _attr_name = "Health Status"
 
@@ -223,10 +195,6 @@ class PurpleAirHealthStatusSensor(PurpleAirBase):
     def native_value(self):
         return "online" if self.result else "offline"
 
-
-# ────────────────────────────────────────────────────────────────
-# Sites
-# ────────────────────────────────────────────────────────────────
 class PurpleAirSitesSensor(PurpleAirBase):
     _attr_name = "Sites"
     _attr_icon = "mdi:map-marker-multiple-outline"
