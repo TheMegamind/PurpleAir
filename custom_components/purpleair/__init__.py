@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up via YAML (not used, config_flow only)."""
+    """Set up PurpleAir (config_flow only)."""
     return True
 
 
@@ -78,7 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "config": cfg,
     }
 
-    # Load both sensors and number entities (Update Interval)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
