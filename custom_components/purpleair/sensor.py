@@ -13,7 +13,21 @@ from .api import PurpleAirResult
 CATEGORY_TO_LEVEL = {
     "Good": 1,
     "Moderate": 2,
-    "Unhealthy for Sensitive Groups": 3,
+    "Unhealthy for Sensitive Groups": 3,class PurpleAirAQISensor(PurpleAirBaseSensor):
+    _attr_has_entity_name = True
+    _attr_name = "AQI"
+    _attr_icon = "mdi:weather-hazy"
+    _attr_native_unit_of_measurement = "AQI"
+    _attr_state_class = SensorStateClass.MEASUREMENT  # ← THIS LINE
+
+    @property
+    def unique_id(self):
+        return f"{self._base_unique}_aqi"
+
+    @property
+    def native_value(self):
+        return self.result.aqi if self.result else None
+
     "Unhealthy": 4,
     "Very Unhealthy": 5,
     "Hazardous": 6,
@@ -62,22 +76,21 @@ async def async_setup_entry(
     )
 
 
-class PurpleAirBaseSensor(CoordinatorEntity, SensorEntity):
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self.entry = entry
-        self._base_unique = entry.entry_id
+class PurpleAirAQISensor(PurpleAirBaseSensor):
+    _attr_has_entity_name = True
+    _attr_name = "AQI"
+    _attr_icon = "mdi:weather-hazy"
+    _attr_native_unit_of_measurement = "AQI"
+    _attr_state_class = SensorStateClass.MEASUREMENT  # ← THIS LINE
 
     @property
-    def result(self) -> PurpleAirResult | None:
-        return self.coordinator.data
+    def unique_id(self):
+        return f"{self._base_unique}_aqi"
 
     @property
-    def device_info(self) -> DeviceInfo:
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.entry.entry_id)},
-            name="PurpleAir",
-        )
+    def native_value(self):
+        return self.result.aqi if self.result else None
+
 
 
 # ─────────────────────────────────────────────────────────────
