@@ -1,4 +1,4 @@
-# sensor.py (working)
+# custom_components/purpleair/sensor.py
 
 from __future__ import annotations
 
