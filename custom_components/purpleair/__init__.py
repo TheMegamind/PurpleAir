@@ -51,11 +51,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client = PurpleAirClient(session, cfg)
 
+    last_aqi: int | None = None
+    
     async def async_update():
+        nonlocal last_aqi
         try:
-            return await client.fetch()
+            data = await client.fetch()
+    
+            # Compute AQI delta safely
+            if data and data.aqi is not None:
+                if last_aqi is None:
+                    data._aqi_delta = 0
+                else:
+                    data._aqi_delta = data.aqi - last_aqi
+                last_aqi = data.aqi
+            else:
+                data._aqi_delta = None
+    
+            return data
+    
         except Exception as err:
             raise UpdateFailed(str(err)) from err
+    
 
     coordinator = DataUpdateCoordinator(
         hass,
