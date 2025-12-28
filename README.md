@@ -164,7 +164,6 @@ Editable at any time:
 * **AQI is `unknown`** → Check API key
 * **No sensors found** → Increase search range
 * **Private sensor not working** → Verify read key
-* **Entity names changed unexpectedly** → Remove and re-add integration
 
 ---
 
