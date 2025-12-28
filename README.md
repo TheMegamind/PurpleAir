@@ -77,7 +77,7 @@ This integration supports multiple conversion methods used by air-quality agenci
 3. Category: **Integration**
 4. Install → Restart Home Assistant
 5. Go to **Settings → Devices & Services → Add Integration**
-6. Select **PurpleAir**
+6. Select **PurpleAir Plus**
 
 ---
 
