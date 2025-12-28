@@ -6,7 +6,7 @@
 </td>
 <td>
 
-# PurpleAir – Custom Integration for Home Assistant
+# PurpleAir Plus – A Custom Integration for Home Assistant
 
 </td>
 </tr>
