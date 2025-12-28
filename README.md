@@ -16,9 +16,9 @@
 
 ---
 
-## 🌫 Why PurpleAir?
+## 🌫 Why Use PurpleAir?
 
-PurpleAir sensors provide **hyper-local, real-time air quality data**, often far more representative than distant official stations.
+PurpleAir sensors provide **hyper-local, real-time air quality data**, which can provide a more representative picture of the air quality where you live.
 
 This is especially useful when:
 
@@ -26,12 +26,10 @@ This is especially useful when:
 * **Wildfire smoke** affects neighborhoods unevenly
 * Terrain, inversions, or weather create **micro-climates**
 
-Sampling multiple nearby monitors provides a more realistic picture of the air **where you actually live**.
-
 ---
 
 > **⚠️ Important disclaimer**  
-> Home Assistant typically does not permit built-in integrations to provide entities based on data not directly provided by the underlying API, prefering to leave the interpretation of said data to the user. This custom integration performs **additional calculations and interpretations** (conversions, sensor averaging, categories, etc.), that are subject to change and **not provided directly by the PurpleAir API**. Use this data responsibly, as the software is provided "as is," with no liability from the author.
+> Home Assistant typically does not permit built-in integrations to provide entities based on data not directly provided by the underlying API, prefering to leave the interpretation of said data to the user. This custom integration performs **additional calculations and interpretations** (conversions, sensor averaging, categories, etc.), that are subject to change and **not provided directly by the PurpleAir API**. Use caution if you are relying on this data this data responsibly, as the software is provided "as is," with no liability from the author.
 
 ---
 
@@ -40,7 +38,7 @@ Sampling multiple nearby monitors provides a more realistic picture of the air *
 ### Core Capabilities
 
 * Automatically discovers **public PurpleAir sensors** near a given location
-* **Multi-sensor averaging** for improved stability and reliability
+* **Multi-sensor averaging** of nearby monitors for improved stability and reliability
 * Optional **weighted averaging** (distance + sensor reliability)
 * Optional use of **private sensors** via sensor index + read key
 * Fully async, coordinator-based architecture
