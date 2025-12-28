@@ -1,11 +1,10 @@
-
----
-
-
-<table><tr><td width="100">
+<table>
+<tr>
+<td width="100">
 <img src="https://github.com/TheMegamind/PurpleAir/blob/main/assets/PurpleAir.png"
      width="100" alt="PurpleAir Logo">
-</td><td>
+</td>
+<td>
 
 # PurpleAir – Custom Integration for Home Assistant
 
@@ -13,67 +12,65 @@
 </tr>
 </table>
 
-
-#### Fetches PM2.5-based data from nearby PurpleAir sensors, with multi-sensor averaging, an adjustable polling rate, and five PM2.5 conversion options.
-
----
-
-## ✨ Features
-
-***Important: Home Assistant does not permit built-in integrations to provide entities based on data not directly provided by the underlying API. There are good reasons for this, and users should be cautious of the conversions and other data supplied by this custom integration. Your use of said data is at your own risk and should not be relied upon without thorough review of the underlying code.***
-
-* Automatically finds **public PurpleAir sensors** within a specific distance from a location
-* Supports a variety of **PM2.5 conversion formulas**:
-
-  * US EPA
-  * Woodsmoke
-  * AQ&U
-  * LRAPA
-  * CF=1
-  * None
-* Uses **averaged AQI** from multiple sensors
-* Supports **weighted averaging** (distance + sensor reliability score)
-* Adjustable:
-
-  * Search radius
-  * Miles/kilometers
-  * Update interval
-  * Use of weighted calculations
-* Provides three sensor attributes:
-
-  * **aqi** – PM2.5 AQI (converted)
-  * **category** – Good / Moderate / Unhealthy, etc.
-  * **sites** – List of contributing PurpleAir sensors
-* Minimal configuration required
-* Fully asynchronous and efficient
-
+#### Hyper-local air quality monitoring using nearby PurpleAir sensors, with configurable averaging, conversion formulas, and live polling control.
 
 ---
 
-### 🟣 Why Use PurpleAir for AQI Monitoring?
+## 🌫 Why PurpleAir?
 
-While there many reliable sources for AQI data, PurpleAir sensors provide **hyperlocal, real-time air quality information** from devices installed in your neighborhood. This can be be especially valuable in locations where:
+PurpleAir sensors provide **hyper-local, real-time air quality data**, often far more representative than distant official stations.
 
-* **Official sensors are too far away** to represent local conditions accurately.
-* **Terrain, weather inversions, or microclimates** cause large AQI variations over short distances.
-* **Wildfire smoke or pollution events** impact specific areas unevenly within a given area.
+This is especially useful when:
 
-By sampling from nearby monitors, users get air quality data that reflects the air where they live, rather than regional averages.
+* Official air quality monitors are **miles away**
+* **Wildfire smoke** affects neighborhoods unevenly
+* Terrain, inversions, or weather create **micro-climates**
 
-
-### 🔵 Why Average Among Multiple Sensors?
-
-Supporting multiple sensors allows for **improved accuracy through redundancy.** A single sensor may temporarily read high or low due to wind direction, cleaning activity, hardware contamination, or obstruction, ensuring earlier and more accurate alerts when outdoor air becomes unhealthy. 
-* **Differentiate indoor vs. outdoor conditions**, which is useful for:
+Sampling multiple nearby monitors provides a more realistic picture of the air **where you actually live**.
 
 ---
 
-*Note: This integration is still in beta and is not yet available directly in HACs.*
+> **⚠️ Important disclaimer**  
+> Home Assistant typically does not permit built-in integrations to provide entities based on data not directly provided by the underlying API, prefering to leave the interpretation of said data to the user. This custom integration performs **additional calculations and interpretations** (conversions, sensor averaging, categories, etc.), that are subject to change and **not provided directly by the PurpleAir API**. Use this data responsibly, as the software is provided "as is," with no liability from the author.
+
+---
+
+## ✨ Custom Integration Features
+
+### Core Capabilities
+
+* Automatically discovers **public PurpleAir sensors** near a given location
+* **Multi-sensor averaging** for improved stability and reliability
+* Optional **weighted averaging** (distance + sensor reliability)
+* Optional use of **private sensors** via sensor index + read key
+* Fully async, coordinator-based architecture
+
+---
+
+## 🔢 PM₂.₅ Conversion Formulas
+
+This integration supports multiple conversion methods used by air-quality agencies and research groups:
+
+| Conversion | Best For | Notes |
+|-----------|---------|-------|
+| **US EPA** | Most users | Recommended default |
+| **Woodsmoke** | Wildfire regions | Better smoke accuracy |
+| **AQ&U** | Mountain / inversion zones | Utah DEQ |
+| **LRAPA** | Humid climates | Oregon LRAPA |
+| **CF = 1** | Indoor sensors | Raw factory value |
+| **None** | Research | No correction |
+
+> **Recommendation:**  
+> Use **US EPA** unless you are specifically tuning for wildfire smoke.
+
+---
 
 ## 📦 Installation (HACS – Custom Repository)
 
+> *This integration is currently in beta and not listed in the HACS store.*
+
 1. Open **HACS → Integrations → Custom repositories**
-2. Add this URL:
+2. Add this url:
 
    ```
    https://github.com/TheMegamind/PurpleAir
@@ -82,114 +79,105 @@ Supporting multiple sensors allows for **improved accuracy through redundancy.**
 3. Category: **Integration**
 4. Install → Restart Home Assistant
 5. Go to **Settings → Devices & Services → Add Integration**
-6. Choose **PurpleAir**
+6. Select **PurpleAir**
 
 ---
 
 ## ⚙️ Configuration
 
-### Initial Setup Fields
+### Initial Setup
 
-| Setting                  | Description                                |
-| ------------------------ | ------------------------------------------ |
-| **API Key**              | PurpleAir API key (required)               |
-| **Device Search**        | Whether to auto-locate nearby sensors      |
-| **Latitude / Longitude** | Center coordinate for search box           |
-| **Search Range**         | Radius around the coordinate (0.1–50)      |
-| **Unit**                 | Miles or kilometers                        |
-| **Weighted**             | Enable distance/quality weighted averaging |
-| **Conversion**           | PM2.5 conversion method (See below)        |
-| **Update Interval**      | Minutes between sensor refresh             |
+| Setting | Description |
+|-------|-------------|
+| **API Key** | PurpleAir API key |
+| **Device Search** | Auto-discover nearby sensors |
+| **Latitude / Longitude** | Center point for search |
+| **Search Range** | Radius (0.1–50 miles/km) |
+| **Unit** | Miles or kilometers |
+| **Weighted** | Enable weighted averaging |
+| **Conversion** | PM₂.₅ conversion formula |
+| **Update Interval** | Polling interval (minutes) |
 
-If *Device Search* is OFF, you may supply:
+If **Device Search** is disabled, you may provide:
 
-* **Sensor Index** (ID of a single PurpleAir sensor)
-* **Read Key** (for private sensors only)
+* **Sensor Index** (single sensor ID)
+* **Read Key** (private sensors only)
 
 ### Options (after setup)
 
-Can be edited anytime:
+Editable at any time:
 
-* Search Range
-* Unit (miles/km)
-* Weighted
+* Search range
+* Miles / kilometers
+* Weighted averaging
 * Conversion method
 * Update interval
 
-Latitude and longitude remain fixed after initial setup. Changing the location requires removing and re-adding the integration.
+> Latitude and longitude are fixed after setup.  
+> To change location, remove and re-add the integration.
 
 ---
 
-## 🧪 Entity Provided
+## 📊 Entities Provided
 
-| Entity                 | Type   | Description                                |
-| ---------------------- | ------ | ------------------------------------------ |
-| `sensor.purpleair` | Sensor | PM2.5 AQI value, category, and sensor list |
+### Sensors
 
----
+| Entity | Description |
+|------|-------------|
+| **AQI** | Calculated AQI value |
+| **AQI Delta** | Change since previous poll |
+| **AQI Level** | Numeric level (1–6) |
+| **AQI Color** | Green / Yellow / Orange / Red / Purple / Maroon |
+| **Category** | AQI category (Good, Moderate, etc.) |
+| **Health Advisory** | Long advisory text |
+| **Health Status** | `online` / `offline` |
+| **Sites** | Sensors contributing to the average |
+| **Conversion** | Active conversion method |
 
-## ⏱ Update Interval
+### Control
 
-This setting controls how frequently the integration requests new data from the PurpleAir API and updates the sensor values inside Home Assistant.
+| Entity | Description |
+|------|-------------|
+| **Update Interval** | Live polling interval control (minutes) |
 
-| Interval                           | What It Means    | Impact                                         |
-| ---------------------------------- | ---------------- | ---------------------------------------------- |
-| Short (e.g., **1–5 minutes**)      | Frequent updates | More API usage; more current AQI               |
-| Moderate (e.g., **10–15 minutes**) | Balanced updates | Recommended for most users                     |
-| Long (e.g., **30–60 minutes**)     | Fewer updates    | Lowest API use; slower to react to air changes |
-
-### 📌 Recommendation
-
-> For most users, **10 minutes** provides a good balance between responsiveness and API efficiency.
-
-### ⚠ Notes
-
-* Shorter intervals **do not improve sensor accuracy**, only responsiveness.
-* If you are monitoring **wildfire smoke or rapid AQI changes**, consider **5–10 minutes**.
-* If you have **many PurpleAir sensors** configured, longer intervals help reduce API load.
-* The interval only affects **data refresh**, not how often the UI redraws.
+> The **Update Interval** control appears directly on the **device page** and takes effect immediately.
 
 ---
 
-## 🌫 PM₂.₅ Conversion Formulas Explained
-*For most outdoor use, **US EPA** is recommended unless you live in a wildfire-heavy region.*
+## ⏱ Update Interval Behavior
 
+| Interval | Effect |
+|--------|-------|
+| **1–5 min** | Rapid response, higher API usage |
+| **10–15 min** | Recommended balance |
+| **30–60 min** | Lowest API usage |
 
-| Formula       | Best For                       | Description / Source                                                                                                                      |
-| ------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| **US EPA**    | Most users                     | Official U.S. EPA correction for PurpleAir data. Adjusts for humidity and general outdoor conditions. Based on multi-site national study. |
-| **Woodsmoke** | Wildfire areas                 | Optimized for particles from wildfire smoke, pellets, and wood burning. Often used in Western U.S.                                        |
-| **AQ&U**      | Mountain/valley regions (Utah) | Used by the Utah Dept. of Environmental Quality for inversion-prone areas. Works well in high-elevation, dry climates.                    |
-| **LRAPA**     | Very humid climates            | Developed by Lane Regional Air Protection Agency (Oregon). Reduces over-reporting of PM₂.₅ caused by humidity swelling tiny particles.    |
-| **CF = 1**    | Indoor sensors                 | A factory “no-correction/wet” value. High-bias outdoors, but suitable indoors (no humidity correction needed).                            |
-| **None**      | Raw data use                   | Reports the uncorrected sensor value exactly as measured. Most users shouldn’t choose this. Used for research or custom processing.       |
-
-
----
-
-### 🔑 API Key Notes
-Your API key is stored securely by Home Assistant.  
-No YAML or secrets file configuration is required.
+**Notes:**
+* Shorter intervals improve responsiveness, **not accuracy**
+* Wildfire monitoring may benefit from faster polling
+* Interval changes apply immediately without restart
 
 ---
 
 ## 🛠 Troubleshooting
 
-* If AQI remains `unknown`, verify your **API key**.
-* If no sensors are detected, increase **search_range** in Options.
-* For private sensors, ensure **read_key** is correct.
+* **AQI is `unknown`** → Check API key
+* **No sensors found** → Increase search range
+* **Private sensor not working** → Verify read key
+* **Entity names changed unexpectedly** → Remove and re-add integration
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License.
-See the `LICENSE` file for details.
-
-## Disclaimers
-
-* The **PurpleAir** name and logo are trademarks of **PurpleAir, Inc.**  
-* The **HOME ASSISTANT** name and logo are trademarks of **Nabu Casa, Inc.**.
-* This project is an independent, community-maintained integration and is **not affiliated with, endorsed by, or sponsored by PurpleAir, Inc. or Nabu Casa, Inc.** in any way.
+MIT License — see `LICENSE`.
 
 ---
+
+## ⚠️ Trademarks & Disclaimers
+
+* **PurpleAir®** name and logo are trademarks of **PurpleAir, Inc.**
+* **Home Assistant®** name and logo are trademarks of **Nabu Casa, Inc.**
+* This project is **independent**, community-maintained, and **not affiliated with or endorsed by PurpleAir or Nabu Casa**.
+
+
