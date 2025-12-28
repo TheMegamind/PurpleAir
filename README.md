@@ -33,7 +33,7 @@ This is especially useful when:
 
 ---
 
-## ✨ Custom Integration Features
+## ✨ PurpleAir Plus Features
 
 ### Core Capabilities
 
