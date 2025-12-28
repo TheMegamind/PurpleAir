@@ -176,5 +176,6 @@ MIT License — see `LICENSE`.
 * **PurpleAir®** name and logo are trademarks of **PurpleAir, Inc.**
 * **Home Assistant®** name and logo are trademarks of **Nabu Casa, Inc.**
 * This project is **independent**, community-maintained, and **not affiliated with or endorsed by PurpleAir or Nabu Casa**.
+* The **"Plus"** in **PurpleAir Plus** name is an invention intended to distinguish this custom integration from the [Official Home Assistant PurpleAir Integration](https://www.home-assistant.io/integrations/purpleair/).
 
 
